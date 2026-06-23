@@ -1,12 +1,30 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+
+from PyInstaller.utils.hooks import collect_all
+
+
+script_dir = SPECPATH
+script_path = os.path.join(script_dir, 'IMS_tinytask.py')
+icon_path = os.path.join(script_dir, 'icon.ico')
+version_path = os.path.join(script_dir, 'version_info.txt')
+
+datas = [(icon_path, '.')]
+binaries = []
+hiddenimports = []
+
+pynput_datas, pynput_binaries, pynput_hiddenimports = collect_all('pynput')
+datas += pynput_datas
+binaries += pynput_binaries
+hiddenimports += pynput_hiddenimports
 
 a = Analysis(
-    ['IMS_tinytask.py'],
-    pathex=[],
-    binaries=[],
-    datas=[],
-    hiddenimports=[],
+    [script_path],
+    pathex=[script_dir],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -35,4 +53,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=icon_path,
+    version=version_path,
 )
