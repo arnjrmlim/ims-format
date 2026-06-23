@@ -26,3 +26,5 @@ Maintainers will review reports as promptly as possible, validate the issue, and
 - Treat source workbooks and exported files as sensitive business data.
 - Run the Windows macro helper only from trusted source code or trusted release artifacts.
 - Keep local control services bound to loopback addresses unless a formal security review approves a broader network surface.
+- Publish IMS TinyTask executables only through trusted GitHub Releases, and keep the release asset name as `IMS_tinytask.exe` so the formatter can use GitHub's latest-release download endpoint.
+- Do not add local absolute paths, usernames, access tokens, passwords, or machine-specific build directories to source files or documentation.

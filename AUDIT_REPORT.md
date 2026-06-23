@@ -4,7 +4,7 @@ Audit date: 2026-06-23
 
 ## Summary
 
-The repository contains a browser-based Excel formatter (`Formatter.html`) and a Windows-only Python macro helper (`IMS_tinytaskv4/IMS_tinytask.py`). The workspace also contains generated PyInstaller build folders, compiled bytecode caches, executable outputs, temporary extraction files, and a recorded macro/test artifact that should not be committed to GitHub.
+The repository contains a browser-based Excel formatter (`Formatter.html`) and a Windows-only Python macro helper (`IMS_tinytaskv4/IMS_tinytask.py`). Generated PyInstaller build folders, compiled bytecode caches, executable outputs, temporary extraction files, and recorded macro/test artifacts should not be committed to GitHub.
 
 No hardcoded passwords, API keys, tokens, email credentials, database credentials, or cloud secrets were found in source files. The project does intentionally use a local loopback HTTP bridge at `127.0.0.1:8765` and a Windows URL protocol named `ims-tinytask`; these are local integration points, not external secrets.
 
@@ -27,9 +27,12 @@ No hardcoded passwords, API keys, tokens, email credentials, database credential
 
 ### Documentation
 
-- `IMS_tinytaskv4/README.txt` - minimal run instructions; should be replaced by a root `README.md`.
+- `README.md` - main project documentation and usage guide.
+- `RELEASE.md` - IMS TinyTask build and GitHub Release asset publishing guide.
+- `SECURITY.md` - vulnerability reporting and security practices.
+- `CONTRIBUTING.md` - contribution and validation guidance.
 
-### Build Artifacts
+### Build Artifacts To Keep Out Of Git
 
 - `IMS_tinytaskv4/build/`
 - `IMS_tinytaskv4/build_clean/`
@@ -76,11 +79,12 @@ No direct credentials were found. Local machine path fragments appear only insid
 
 - `Formatter Copy.html` - older duplicate of the main formatter; keep only as history outside Git if needed.
 - `IMS_tinytaskv4/IMS_tinytask_updated.spec` - stale alternate PyInstaller spec.
-- `IMS_tinytaskv4/README.txt` - superseded by root `README.md` after documentation is created.
+- None currently tracked. The superseded `IMS_tinytaskv4/README.txt` has been removed.
 
 ## Security Findings
 
 - No hardcoded secrets detected in source files.
+- No hardcoded local machine paths detected in tracked source or documentation.
 - External CDN dependencies are loaded by `Formatter.html`:
   - `https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js`
   - `https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js`
@@ -117,6 +121,7 @@ Safe to delete now:
 - Stale duplicate `Formatter Copy.html`.
 - Recorded test output `IMS_tinytaskv4/test.json`.
 - Stale `IMS_tinytaskv4/IMS_tinytask_updated.spec`.
+- Superseded `IMS_tinytaskv4/README.txt`.
 
 Conservative keep:
 

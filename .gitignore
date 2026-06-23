@@ -28,6 +28,8 @@ build/
 build_*/
 dist/
 dist_*/
+release/
+releases/
 *.egg-info/
 *.manifest
 *.spec.tmp
@@ -42,6 +44,9 @@ warn-*.txt
 
 # Executables and generated outputs
 *.exe
+*.msi
+*.zip
+*.7z
 *.tmp
 *.log
 output/

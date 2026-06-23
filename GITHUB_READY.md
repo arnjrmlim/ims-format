@@ -9,13 +9,13 @@
 - [x] Dependencies documented.
 - [x] Security policy created.
 - [x] Contributing guide created.
-- [ ] License selected and added.
+- [x] License selected and added.
 - [ ] Optional code quality refactors completed.
-- [ ] Release artifact process documented or automated.
+- [x] Release artifact process documented.
 - [x] Ready for first commit after final review.
 
 ## Notes
 
-- Choose MIT or Apache 2.0 before public publication.
-- Keep executable builds out of Git and publish them through GitHub Releases if needed.
+- IMS TinyTask downloads use `https://github.com/arnjrmlim/ims-format/releases/latest/download/IMS_tinytask.exe`.
+- Keep executable builds out of Git and publish them through GitHub Releases with the exact asset name `IMS_tinytask.exe`.
 - Consider splitting `Formatter.html` into separate HTML, CSS, and JavaScript files after publication.

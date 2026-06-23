@@ -676,7 +676,7 @@
         <p class="small-note">Use the bundled Windows macro tool after exporting or while encoding in IMS. Save macros and settings inside TinyTask, then connect here to load and play them.</p>
 
         <div class="macro-grid">
-          <a class="secondary-button" id="macroDownloadLink" href="https://github.com/arnjrmlim/ims-format/releases">Download IMS TinyTask</a>
+          <a class="secondary-button" id="macroDownloadLink" href="https://github.com/arnjrmlim/ims-format/releases/latest/download/IMS_tinytask.exe" download>Download IMS TinyTask</a>
 
           <div class="macro-status offline" id="macroSessionStatus">
             <span>Session</span>
@@ -805,9 +805,13 @@
   const macroStopPlayButton = document.getElementById('macroStopPlayButton');
   const tinyTaskApi = 'http://127.0.0.1:8765';
   const tinyTaskProtocol = 'ims-tinytask://open';
+  const tinyTaskDownloadUrl = 'https://github.com/arnjrmlim/ims-format/releases/latest/download/IMS_tinytask.exe';
+  const tinyTaskReleaseApiUrl = 'https://api.github.com/repos/arnjrmlim/ims-format/releases/latest';
+  const tinyTaskReleasesUrl = 'https://github.com/arnjrmlim/ims-format/releases/latest';
   const macroDownloadLink = document.getElementById('macroDownloadLink');
 
   fileInput.addEventListener('change', handleFile);
+  macroDownloadLink.addEventListener('click', downloadTinyTask);
   macroConnectButton.addEventListener('click', connectTinyTask);
   macroStopButton.addEventListener('click', () => sendTinyTaskCommand('stop'));
   macroPlayButton.addEventListener('click', () => sendTinyTaskCommand('play'));
@@ -945,6 +949,47 @@
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  async function downloadTinyTask(event) {
+    if (event) {
+      event.preventDefault();
+    }
+
+    try {
+      setStatus('Checking IMS TinyTask release', '');
+      const releaseResponse = await fetch(tinyTaskReleaseApiUrl, {
+        cache: 'no-store',
+        headers: {
+          Accept: 'application/vnd.github+json'
+        }
+      });
+
+      if (!releaseResponse.ok) {
+        throw new Error('Latest release is not available');
+      }
+
+      const release = await releaseResponse.json();
+      const hasExecutable = Array.isArray(release.assets)
+        && release.assets.some(asset => asset && asset.name === 'IMS_tinytask.exe');
+
+      if (!hasExecutable) {
+        throw new Error('IMS_tinytask.exe is not attached to the latest release');
+      }
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = tinyTaskDownloadUrl;
+      downloadLink.download = 'IMS_tinytask.exe';
+      downloadLink.rel = 'noopener';
+      downloadLink.style.display = 'none';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+      setStatus('Downloading IMS TinyTask', 'ready');
+    } catch (err) {
+      setStatus('Download failed; opening release page', 'error');
+      window.location.href = tinyTaskReleasesUrl;
+    }
+  }
+
   function updateTinyTaskSession(session) {
     const state = session.state || 'idle';
     const connected = Boolean(session.ok);
@@ -1046,7 +1091,7 @@
     macroConnectButton.disabled = false;
     setTinyTaskOffline();
     setStatus('TinyTask not installed; downloading', 'error');
-    macroDownloadLink.click();
+    await downloadTinyTask();
   }
 
   async function sendTinyTaskCommand(command) {

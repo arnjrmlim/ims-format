@@ -46,3 +46,11 @@ python -m py_compile IMS_tinytaskv4\IMS_tinytask.py
 ```
 
 Also manually test workbook upload, preview, validation, and export in `Formatter.html` when changing formatter logic.
+
+When changing IMS TinyTask distribution behavior, test the formatter's **Download IMS TinyTask** button and confirm it points to:
+
+```text
+https://github.com/arnjrmlim/ims-format/releases/latest/download/IMS_tinytask.exe
+```
+
+Release assets must keep the filename `IMS_tinytask.exe`; version numbers belong in Git tags and release titles.
