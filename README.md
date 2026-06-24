@@ -65,7 +65,16 @@ To run IMS TinyTask from source:
 python IMS_tinytaskv4\IMS_tinytask.py
 ```
 
-Executable builds should be published as GitHub Release assets rather than committed to the repository. See [RELEASE.md](RELEASE.md) for build and upload instructions.
+Executable builds should be created from inside `IMS_tinytaskv4` and published
+as GitHub Release assets rather than committed to the repository:
+
+```powershell
+cd IMS_tinytaskv4
+py -m PyInstaller IMS_tinytask.spec --clean --noconfirm
+```
+
+The release asset must be uploaded as `IMS_tinytask.exe`. See
+[RELEASE.md](RELEASE.md) for the full validation and upload checklist.
 
 ## Folder Structure
 
@@ -77,6 +86,7 @@ Executable builds should be published as GitHub Release assets rather than commi
 |   |-- IMS_tinytask.spec
 |   |-- icon.ico
 |   |-- final_tiny.rec
+|   |-- version_info.txt
 |   `-- requirements.txt
 |-- AUDIT_REPORT.md
 |-- CONTRIBUTING.md

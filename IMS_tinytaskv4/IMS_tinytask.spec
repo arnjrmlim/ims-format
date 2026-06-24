@@ -5,11 +5,16 @@ import os
 from PyInstaller.utils.hooks import collect_all
 
 
+# Keep this spec inside IMS_tinytaskv4 and build from that directory. SPECPATH
+# makes the script, icon, bundled data, and version metadata resolve correctly
+# whether PyInstaller is launched by spec file or from a clean checkout.
 script_dir = SPECPATH
 script_path = os.path.join(script_dir, 'IMS_tinytask.py')
 icon_path = os.path.join(script_dir, 'icon.ico')
 version_path = os.path.join(script_dir, 'version_info.txt')
 
+# Bundle icon.ico as runtime data for Tk's iconbitmap() while also embedding it
+# into the EXE below so Windows Explorer, taskbar, and title bar use one icon.
 datas = [(icon_path, '.')]
 binaries = []
 hiddenimports = []

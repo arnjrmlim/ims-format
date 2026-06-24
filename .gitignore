@@ -32,12 +32,17 @@ release/
 releases/
 *.egg-info/
 *.manifest
+*.spec
+!IMS_tinytaskv4/IMS_tinytask.spec
 *.spec.tmp
 
 # PyInstaller generated files
 *.toc
 *.pkg
 *.pyz
+*.pyi-cache/
+.pyinstaller/
+__pyinstaller__/
 base_library.zip
 xref-*.html
 warn-*.txt

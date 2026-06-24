@@ -25,6 +25,13 @@ from pynput import mouse, keyboard
 CONTROL_HOST = "127.0.0.1"
 CONTROL_PORT = 8765
 URL_PROTOCOL = "ims-tinytask"
+APP_USER_MODEL_ID = "IMS.Format.TinyTask"
+APP_ICON_FILE = "icon.ico"
+WM_SETICON = 0x0080
+ICON_SMALL = 0
+ICON_BIG = 1
+IMAGE_ICON = 1
+LR_LOADFROMFILE = 0x0010
 
 DEFAULT_SETTINGS = {
     "record_hotkey": "ctrl+alt+r",
@@ -55,25 +62,163 @@ LEGACY_SETTINGS_FILE = "settings.json"
 
 def resource_path(filename):
 
-    candidates = []
+    # PyInstaller onefile extracts bundled files into sys._MEIPASS at runtime.
+    # During source runs the same asset lives beside this script, so callers can
+    # use one helper without caring whether the app is frozen or unpackaged.
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, filename)
 
-    if getattr(sys, "frozen", False):
-        candidates.append(getattr(sys, "_MEIPASS", ""))
-        candidates.append(os.path.dirname(sys.executable))
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
 
-    candidates.append(os.path.dirname(os.path.abspath(__file__)))
-    candidates.append(os.getcwd())
 
-    for base_path in candidates:
-        if not base_path:
+def set_windows_app_id():
+
+    # Windows uses the AppUserModelID for taskbar grouping and icon identity.
+    # Set it before creating Tk so the shell does not fall back to python.exe.
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+            APP_USER_MODEL_ID
+        )
+    except OSError:
+        pass
+
+
+def apply_window_icon(window):
+
+    icon_path = resource_path(APP_ICON_FILE)
+
+    if os.path.exists(icon_path):
+        try:
+            # Tk needs the .ico file at runtime for source runs and for any
+            # frozen build that bundles icon.ico as data. The "default" option
+            # also gives subsequently-created Tk child windows the same icon.
+            window.iconbitmap(default=icon_path)
+            set_native_window_icons_from_file(window, icon_path)
+            return
+        except tk.TclError:
+            pass
+
+    if not getattr(sys, "frozen", False):
+        return
+
+    # A --onefile build always has the .ico embedded by PyInstaller's --icon
+    # option, even when the .ico is not also present as an extracted data file.
+    # Extract that icon from the running EXE so Tk/Toplevel windows still show
+    # the release icon on clean machines and direct GitHub Release downloads.
+    try:
+        large_icon = ctypes.c_void_p()
+        small_icon = ctypes.c_void_p()
+        extracted = ctypes.windll.shell32.ExtractIconExW(
+            sys.executable,
+            0,
+            ctypes.byref(large_icon),
+            ctypes.byref(small_icon),
+            1
+        )
+
+        if extracted:
+            for hwnd in get_window_hwnds(window):
+                ctypes.windll.user32.SendMessageW(
+                    hwnd,
+                    WM_SETICON,
+                    ICON_BIG,
+                    large_icon
+                )
+                ctypes.windll.user32.SendMessageW(
+                    hwnd,
+                    WM_SETICON,
+                    ICON_SMALL,
+                    small_icon
+                )
+            window._ims_icon_handles = (large_icon, small_icon)
+
+    except (OSError, tk.TclError):
+        pass
+
+
+def set_native_window_icons_from_file(window, icon_path):
+
+    # Tk's iconbitmap() is enough for most windows, but setting WM_SETICON makes
+    # Windows Explorer/taskbar/title-bar icon probes see the same handles on a
+    # clean machine with no existing icon cache.
+    try:
+        load_image = ctypes.windll.user32.LoadImageW
+        load_image.restype = ctypes.c_void_p
+
+        large_icon = load_image(
+            None,
+            icon_path,
+            IMAGE_ICON,
+            32,
+            32,
+            LR_LOADFROMFILE
+        )
+        small_icon = load_image(
+            None,
+            icon_path,
+            IMAGE_ICON,
+            16,
+            16,
+            LR_LOADFROMFILE
+        )
+
+        if not large_icon and not small_icon:
+            return
+
+        for hwnd in get_window_hwnds(window):
+            if large_icon:
+                ctypes.windll.user32.SendMessageW(
+                    hwnd,
+                    WM_SETICON,
+                    ICON_BIG,
+                    large_icon
+                )
+
+            if small_icon:
+                ctypes.windll.user32.SendMessageW(
+                    hwnd,
+                    WM_SETICON,
+                    ICON_SMALL,
+                    small_icon
+                )
+
+        window._ims_icon_handles = (large_icon, small_icon)
+
+    except (OSError, tk.TclError):
+        pass
+
+
+def get_window_hwnds(window):
+
+    # On Windows, Tk can expose both an inner Tk HWND and a window-manager frame
+    # HWND. The visible title-bar/taskbar icon belongs to the frame, so update
+    # both when possible.
+    window.update_idletasks()
+
+    handles = []
+
+    raw_handles = []
+
+    try:
+        raw_handles.append(window.winfo_id())
+    except tk.TclError:
+        pass
+
+    try:
+        raw_handles.append(window.frame())
+    except (AttributeError, tk.TclError):
+        pass
+
+    for raw_handle in raw_handles:
+        try:
+            hwnd = int(raw_handle, 0) if isinstance(raw_handle, str) else int(raw_handle)
+        except (TypeError, ValueError):
             continue
 
-        path = os.path.join(base_path, filename)
+        if hwnd and hwnd not in handles:
+            handles.append(hwnd)
 
-        if os.path.exists(path):
-            return path
-
-    return filename
+    return handles
 
 
 def register_url_protocol():
@@ -815,7 +960,8 @@ class MacroApp:
 
             messagebox.showwarning(
                 "Warning",
-                "No macro recorded."
+                "No macro recorded.",
+                parent=self.root
             )
 
             self.stop_playback()
@@ -1334,13 +1480,15 @@ class MacroApp:
 
             messagebox.showwarning(
                 "Warning",
-                "No macro recorded."
+                "No macro recorded.",
+                parent=self.root
             )
 
             return
 
         filename = filedialog.asksaveasfilename(
-            defaultextension=".json"
+            defaultextension=".json",
+            parent=self.root
         )
 
         if filename:
@@ -1359,7 +1507,8 @@ class MacroApp:
     def load_macro(self):
 
         filename = filedialog.askopenfilename(
-            filetypes=[("JSON Files", "*.json")]
+            filetypes=[("JSON Files", "*.json")],
+            parent=self.root
         )
 
         if not filename:
@@ -1511,14 +1660,7 @@ class MacroApp:
         window.resizable(False, False)
         window.transient(self.root)
         window.grab_set()
-
-        icon_path = resource_path("icon.ico")
-
-        if os.path.exists(icon_path):
-            try:
-                window.iconbitmap(icon_path)
-            except tk.TclError:
-                pass
+        apply_window_icon(window)
 
         panel = tk.Frame(
             window,
@@ -1672,14 +1814,7 @@ class MacroApp:
         self.root = tk.Tk()
 
         self.root.title("IMS TinyTask")
-
-        icon_path = resource_path("icon.ico")
-
-        if os.path.exists(icon_path):
-            try:
-                self.root.iconbitmap(icon_path)
-            except tk.TclError:
-                pass
+        apply_window_icon(self.root)
 
         self.root.resizable(False, False)
 
@@ -1833,14 +1968,7 @@ class MacroApp:
 
         self.root = tk.Tk()
         self.root.title("IMS TinyTask")
-
-        icon_path = resource_path("icon.ico")
-
-        if os.path.exists(icon_path):
-            try:
-                self.root.iconbitmap(icon_path)
-            except tk.TclError:
-                pass
+        apply_window_icon(self.root)
 
         self.root.resizable(False, False)
         self.root.configure(bg=self.COLORS["window"])
@@ -2062,5 +2190,6 @@ class MacroApp:
 
 if __name__ == "__main__":
 
+    set_windows_app_id()
     app = MacroApp()
     app.run()

@@ -54,3 +54,12 @@ https://github.com/arnjrmlim/ims-format/releases/latest/download/IMS_tinytask.ex
 ```
 
 Release assets must keep the filename `IMS_tinytask.exe`; version numbers belong in Git tags and release titles.
+Build IMS TinyTask from inside `IMS_tinytaskv4` only:
+
+```powershell
+cd IMS_tinytaskv4
+py -m PyInstaller IMS_tinytask.spec --clean --noconfirm
+```
+
+Do not commit generated `build/`, `dist/`, `.spec`, `.toc`, `.pkg`, `.pyz`, or
+executable files.

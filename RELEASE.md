@@ -15,30 +15,54 @@ From a clean checkout on Windows:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-pyinstaller IMS_tinytaskv4\IMS_tinytask.spec --clean --noconfirm
+pip install -r IMS_tinytaskv4\requirements.txt
+Set-Location IMS_tinytaskv4
+py -m PyInstaller IMS_tinytask.spec --clean --noconfirm
 ```
+
+Build IMS TinyTask only from the `IMS_tinytaskv4` directory. That keeps
+PyInstaller's `build/`, `dist/`, and generated cache files out of the repository
+root. The checked-in `IMS_tinytask.spec` is the canonical spec file and embeds
+`icon.ico` in the executable while also bundling it for Tk runtime icon loading.
+
+The direct CLI form also works from `IMS_tinytaskv4` for compatibility checks:
+
+```powershell
+py -m PyInstaller --onefile --windowed --icon="icon.ico" IMS_tinytask.py --clean
+```
+
+Use the spec command for release builds so the checked-in icon data, version
+metadata, and `pynput` collection settings are applied consistently.
 
 The expected executable is:
 
 ```text
-dist\IMS_tinytask.exe
+IMS_tinytaskv4\dist\IMS_tinytask.exe
 ```
 
 Before uploading, run a quick smoke test:
 
 ```powershell
-python -m py_compile IMS_tinytaskv4\IMS_tinytask.py
+python -m py_compile IMS_tinytask.py
 ```
 
-Then open `dist\IMS_tinytask.exe`, confirm the IMS TinyTask window starts, and confirm the formatter can connect to `http://127.0.0.1:8765`.
+Then open `dist\IMS_tinytask.exe` from inside `IMS_tinytaskv4`, confirm the IMS
+TinyTask window starts, and confirm the formatter can connect to
+`http://127.0.0.1:8765`.
+
+Icon validation before uploading:
+
+1. Confirm `dist\IMS_tinytask.exe` shows the custom icon in Windows Explorer.
+2. Start the EXE and confirm the title bar and taskbar use the same icon.
+3. Open Settings and confirm the child Tk window uses the same icon.
+4. Test on a clean Windows machine or VM before publishing a GitHub Release.
 
 ## Create a GitHub Release
 
 1. Go to `https://github.com/arnjrmlim/ims-format/releases/new`.
 2. Create a new tag such as `v1.0.0`.
 3. Use a release title such as `IMS Format v1.0.0`.
-4. Upload `dist\IMS_tinytask.exe` as a release asset.
+4. Upload `IMS_tinytaskv4\dist\IMS_tinytask.exe` as a release asset.
 5. Confirm the uploaded asset is named exactly `IMS_tinytask.exe`.
 6. Publish the release.
 
